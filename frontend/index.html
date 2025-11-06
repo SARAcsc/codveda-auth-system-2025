@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Auth</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #fafbff;
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      border-radius: 14px;
+      padding: 2rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 1.75rem;
+      margin-bottom: 1.75rem;
+      color: #2563eb;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #374151;
+    }
+    input {
+      width: 100%;
+      padding: 0.875rem;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    button {
+      width: 100%;
+      padding: 0.875rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+    .toggle a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      margin-left: 4px;
+    }
+    .msg {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .msg.success { background: #ecfdf5; color: #065f46; }
+    .msg.error { background: #fef2f2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="form-title">Sign Up</h1>
+
+    <!-- Register Form -->
+    <form id="register-form" style="display: block;">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" autocomplete="name" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="new-password" />
+      </div>
+      <button type="submit">Create Account</button>
+    </form>
+
+    <!-- Login Form -->
+    <form id="login-form" style="display: none;">
+      <div class="form-group">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" />
+      </div>
+      <button type="submit">Sign In</button>
+    </form>
+
+    <div class="toggle" id="toggle-links">
+      <span>Already have an account?</span>
+      <a href="#" id="show-login">Sign in</a>
+    </div>
+
+    <div class="msg" id="message"></div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:5000/api/auth';
+
+    const registerForm = document.getElementById('register-form');
+    const loginForm = document.getElementById('login-form');
+    const formTitle = document.getElementById('form-title');
+    const toggleLinks = document.getElementById('toggle-links');
+    const messageEl = document.getElementById('message');
+
+    // Toggle to Login
+    document.getElementById('show-login').addEventListener('click', (e) => {
+      e.preventDefault();
+      registerForm.style.display = 'none';
+      loginForm.style.display = 'block';
+      formTitle.textContent = 'Sign In';
+      toggleLinks.innerHTML = 'Need an account? <a href="#" id="show-register">Sign up</a>';
+      document.getElementById('show-register').addEventListener('click', showRegister);
+    });
+
+    // Toggle to Register
+    function showRegister(e) {
+      e.preventDefault();
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+      formTitle.textContent = 'Sign Up';
+      toggleLinks.innerHTML = 'Already have an account? <a href="#" id="show-login">Sign in</a>';
+      document.getElementById('show-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        registerForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        formTitle.textContent = 'Sign In';
+        toggleLinks.innerHTML = 'Need an account? <a href="#" id="show-register">Sign up</a>';
+        document.getElementById('show-register').addEventListener('click', showRegister);
+      });
+    }
+
+    // Show message
+    function showMessage(text, isSuccess) {
+      messageEl.textContent = text;
+      messageEl.className = `msg ${isSuccess ? 'success' : 'error'}`;
+      messageEl.style.display = 'block';
+      setTimeout(() => messageEl.style.display = 'none', 5000);
+    }
+
+    // Register
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!name || !email || !password) return showMessage('All fields required', false);
+
+      try {
+        const res = await fetch(`${API}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showMessage('Account created!', true);
+          setTimeout(() => {
+            document.getElementById('login-email').value = email;
+            showRegister({ preventDefault: () => {} }); // Switch to login
+          }, 1500);
+        } else {
+          showMessage(data.message || 'Registration failed', false);
+        }
+      } catch {
+        showMessage('Could not connect to server', false);
+      }
+    });
+
+    // Login
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!email || !password) return showMessage('Fill all fields', false);
+
+      try {
+        const res = await fetch(`${API}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          localStorage.setItem('token', data.token);
+          window.location.href = 'profile.html';
+        } else {
+          showMessage(data.message || 'Invalid credentials', false);
+        }
+      } catch {
+        showMessage('Login failed', false);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile</title>
+  <style>
+    body { font-family: Arial; max-width: 500px; margin: 40px auto; padding: 20px; }
+    button { padding: 10px 20px; background: #f44336; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>🔒 User Profile</h2>
+  <div id="profile">Loading...</div>
+  <br />
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    const API_BASE = 'http://localhost:5000/api/auth'; // 👈 Change if needed
+
+    async function fetchProfile() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const user = await res.json();
+        if (user.message === 'Token is not valid') {
+          localStorage.removeItem('token');
+          window.location.href = 'index.html';
+        } else {
+          document.getElementById('profile').innerHTML = `
+            <p><strong>Name:</strong> ${user.name}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>ID:</strong> ${user._id}</p>
+          `;
+        }
+      } catch (err) {
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'index.html';
+    }
+
+    fetchProfile();
+  </script>
+</body>
+</html>
